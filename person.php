@@ -73,7 +73,7 @@ class Person
 		}
 	}
 	public function setDOB($value){
-		$this->doB = trim(strip_tags($value));
+		$this->doB = strtotime($value);
 	}
 	public function getDOB($format = ''){
 		if ($this->doB != null && $format == 'qs'){

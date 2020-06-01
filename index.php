@@ -41,7 +41,13 @@ if (isset($_POST['fullname'])){
       for ( $days = 7;  $days--;) {
         $dayOfWeek = $today->modify( '+1 days' )->format( 'l' );
         if (strripos($dod, $dayOfWeek) != false){
-          $person1->setDOD ('last '.$dayOfWeek." ".date("Y-m-d", $pubDate));
+          if ($reference1->getPubDate() != null 
+          && $dayOfWeek == date('l', $reference1->getPubDate())){
+            $person1->setDOD(date("Y-m-d",$reference1->getPubDate()));
+          }
+          else{
+            $person1->setDOD ('last '.$dayOfWeek." ".date("Y-m-d", $pubDate));
+          }
         }
       }
     }
