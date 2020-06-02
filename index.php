@@ -20,9 +20,11 @@ if (isset($_POST['fullname'])){
     $_POST['ref_authors'], 
     $_POST['ref_title'], 
     $_POST['ref_pubdate']);
-  $pubDate = strtotime("today");
+  $today = new DateTime('now');
+  $loopDate = new DateTime('now');
   if ($reference1->getPubDate() != null){
-    $pubDate = $reference1->getPubDate();
+    //shift "today" to pubDate
+    $today = new DateTime(date('Y-m-d',$reference1->getPubDate()));
   }
 
   //handle person
@@ -35,18 +37,16 @@ if (isset($_POST['fullname'])){
   //set Date of Death
   $dod = " ".trim(strip_tags($_POST['dod']));
   if ($dod != " "){
-    $today = new DateTime();
     // makes in possible to input "last friday -1 weeks"
     if (!strripos("last ", $dod)){ 
       for ( $days = 7;  $days--;) {
-        $dayOfWeek = $today->modify( '+1 days' )->format( 'l' );
+        $dayOfWeek = $loopDate->modify( '+1 days' )->format( 'l' );
         if (strripos($dod, $dayOfWeek) != false){
-          if ($reference1->getPubDate() != null 
-          && $dayOfWeek == date('l', $reference1->getPubDate())){
-            $person1->setDOD(date("Y-m-d",$reference1->getPubDate()));
+          if ($dayOfWeek ==  $today->format('l')){
+            $person1->setDOD($today->format("Y-m-d"));
           }
           else{
-            $person1->setDOD ('last '.$dayOfWeek." ".date("Y-m-d", $pubDate));
+            $person1->setDOD ('last '.$dayOfWeek." ".$today->format("Y-m-d"));
           }
         }
       }
@@ -56,7 +56,7 @@ if (isset($_POST['fullname'])){
     }
     else{
       for ($months=0; $months < 11; $months++) { 
-         $month = $today->modify( '-1 months' )->format( 'F' );
+         $month = $loopDate->modify( '-1 months' )->format( 'F' );
          if (strripos($dod, $month) != false){
             $person1->setDOD($month, 10);
          }
@@ -64,6 +64,21 @@ if (isset($_POST['fullname'])){
     }
   }
   //end DOD
+  //DOB
+  $dob = trim(strip_tags($_POST['dob']));
+  if (preg_match('/^1\d{3}$/', $dob)){
+    $person1->setDOB($dob, 9);
+  }
+  if(strtotime($dob) != false){
+    $person1->setDOB($dob);
+  }
+  //reduce accuracy if only month + year:
+  for ($months=0; $months < 11; $months++) { 
+     $month = $loopDate->modify( '-1 months' )->format( 'F' );
+     if (preg_match('/^'.$month.' [12]\d{3}$/i' , $dob)  ){
+        $person1->setDOB($dob, 10);
+     }
+  }
   
   
 	if (!$person1->getQID()){
@@ -175,6 +190,8 @@ function concatWithRef($qs, $reference){
       </div>
         <label for="dod">date of death</label>
         <input type="text" id="dod"  name='dod' placeholder="Recently" >
+        <label for="dob">date of birth</label>
+        <input type="text" id="dob"  name='dob' placeholder="DOD - AGE" >
         <label for="description">short description</label>
         <input type="text" id="description" name='description' >
         </div>
