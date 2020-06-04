@@ -38,11 +38,14 @@ if (isset($_POST['fullname'])){
   $dod = " ".trim(strip_tags($_POST['dod']));
   if ($dod != " "){
     // makes in possible to input "last friday -1 weeks"
-    if (!strripos("last ", $dod)){ 
+    if (preg_match('/^[21]\d{3}$/', $dod)){
+      $person1->setDOD($dod."-01-01", 9);
+    }
+    elseif (!strripos("last ", $dod)){ 
       for ( $days = 7;  $days--;) {
         $dayOfWeek = $loopDate->modify( '+1 days' )->format( 'l' );
         if (strripos($dod, $dayOfWeek) != false){
-          if ($dayOfWeek ==  $today->format('l')){
+          if ($dayOfWeek == $today->format('l')){
             $person1->setDOD($today->format("Y-m-d"));
           }
           else{
@@ -55,10 +58,15 @@ if (isset($_POST['fullname'])){
       $person1->setDOD($dod);
     }
     else{
+      //"if MONTH string detected take 'last MONTH' as dod"
       for ($months=0; $months < 11; $months++) { 
          $month = $loopDate->modify( '-1 months' )->format( 'F' );
          if (strripos($dod, $month) != false){
-            $person1->setDOD($month, 10);
+            $date = new DateTime($month." ".$today->format("Y"));
+            if ($date > $today){
+              $date->modify('-1 years');
+            }
+            $person1->setDOD($date->format("Y-m-d"), 10);
          }
       }
     }
@@ -66,10 +74,10 @@ if (isset($_POST['fullname'])){
   //end DOD
   //DOB
   $dob = trim(strip_tags($_POST['dob']));
-  if (preg_match('/^1\d{3}$/', $dob)){
-    $person1->setDOB($dob, 9);
+  if (preg_match('/^[12]\d{3}$/', $dob)){
+    $person1->setDOB($dob."-01-01", 9);
   }
-  if(strtotime($dob) != false){
+  elseif(strtotime($dob) != false){
     $person1->setDOB($dob);
   }
   //reduce accuracy if only month + year:
@@ -89,27 +97,35 @@ LAST|Lfr|\"".$person1->getName()."\"
 LAST|Lnl|\"".$person1->getName()."\"
 LAST|Den|\"".$person1->getDescription()."\"
 LAST|P31|Q5
-".$region->getNationality('qs');
+LAST|".$region->getNationality('qs');
   }
-  $qs .= "\n".$person1->getName('qs')
-  .concatWithRef("\nLAST|P793|".$region->getQID(), $reference1->getQS()) 
-  .concatWithRef("\n".$person1->getDOB('qs'), $reference1->getQS())
-  .concatWithRef("\n".$person1->getDOD('qs').$person1->getAge('qs'), $reference1->getQS())
-  ."\n".$reference1->getDescribedAtUrlQS()
-  .concatWithRef("\nLAST|P1196|Q3739104", $reference1->getQS()) //manner of death = natural
-  .concatWithRef("\nLAST|P509|Q84263196", $reference1->getQS()) //cause  of death = COVID-19
-  .concatWithRef("\nLAST|P1050|Q84263196|P1534|Q4|P582|+".date('Y-m-d', $person1->getDOD()).'T00:00:00Z/'.$person1->getDODAccuracy(), $reference1->getQS());//medical condition = COVID-19
+  $qs .= 
+   appendProp($person1->getQID(),$person1->getName('qs'))
+  .appendProp($person1->getQID(), "P793|".$region->getQID(), $reference1->getQS()) 
+  .appendProp($person1->getQID(), $person1->getDOB('qs'), $reference1->getQS())
+  .appendProp($person1->getQID(), $person1->getDOD('qs'), $reference1->getQS())
+  .appendProp($person1->getQID(), $reference1->getDescribedAtUrlQS())
+  .appendProp($person1->getQID(), "P1196|Q3739104", $reference1->getQS()) //manner of death = natural
+  .appendProp($person1->getQID(), "P509|Q84263196", $reference1->getQS()) //cause  of death = COVID-19
+  .appendProp($person1->getQID(), "P1050|Q84263196|P1534|Q4|P582|+".date('Y-m-d', $person1->getDOD()).'T00:00:00Z/'.$person1->getDODAccuracy(), $reference1->getQS());//medical condition = COVID-19
 
-  if ($person1->getQID()){
-    $qs = preg_replace('/^LAST/m', $person1->getQID(), $qs);
-  }
+  
 
 }
 
-function concatWithRef($qs, $reference){
-  if (trim($qs) != ""){
-    return $qs.$reference;
+function appendProp($qid = null, $prop = null, $ref = null){
+  $qs = '';
+  if ($qid == null){
+    $qid = "LAST";
   }
+  $propLines = explode("\n", $prop);
+  foreach ($propLines as $propLine) {
+    if (trim($propLine) != ''){
+      $qs .= "\n".$qid."|".$propLine.$ref;
+    }
+  }
+  return $qs;
+
 }
 
 ?>

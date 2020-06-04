@@ -113,7 +113,7 @@ class Region
 			}
 		}
 		if ($this->nationality != null && $format == 'qs'){
-			return 'LAST|P27|'.$this->nationality;
+			return 'P27|'.$this->nationality;
 		}
 		return $this->nationality;
 	}

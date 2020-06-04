@@ -38,12 +38,14 @@ class Person
 	}
 	public function getDOD($format=''){
 		if ( $this->doD != null && $format == 'qs' ){
-		   return "LAST|P570|+".date("Y-m-d", $this->doD).'T00:00:00Z/'.$this->doDAccuracy;
+		   return "P570|+".date("Y-m-d", $this->doD).'T00:00:00Z/'.$this->doDAccuracy."|".self::getAge('qs');
 		}
 		else{
 		   return $this->doD;
 		}
 	}
+	
+
 	public function setQID($value){
 		$value = trim(strip_tags($value));
 		if(preg_match('/^Q\d+$/', $value)){
@@ -65,7 +67,7 @@ class Person
 			$this->age =  floor( ( $this->doD - $this->doB ) / 31556926);
 		}
 		if ($this->age != null && $format == 'qs'){
-			return  "|P3629|".$this->age.'U24564698'; //years old
+			return  "P3629|".$this->age.'U24564698'; //years old
 		}
 		else{
 			return $this->age;
@@ -92,12 +94,12 @@ class Person
 					$year--; 
 				}
 
-				return"LAST|P569|+".$year.'-00-00T00:00:00Z/9|P1480|Q5727902'
+				return "P569|+".$year.'-00-00T00:00:00Z/9|P1480|Q5727902'
 				.'|P1319|+'.date("Y-m-d", strtotime("-1 years +1 days", $this->doB))."T00:00:00Z/".$this->doDAccuracy.
 			     '|P1326|+'.date('Y-m-d', $this->doB).'T00:00:00Z/'.$this->doDAccuracy;
 			}
 			else{
-				return "LAST|P569|+".date('Y-m-d', $this->doB).'T00:00:00Z/'.$this->doBAccuracy;
+				return "P569|+".date('Y-m-d', $this->doB).'T00:00:00Z/'.$this->doBAccuracy;
 			}
 		}
 		else{
@@ -159,10 +161,9 @@ class Person
 			$qs = '';
 			foreach ($properties as $key => $property) {
 				foreach ($property as $value) {
-					$qs .= "LAST|".$key."|".$value."\n";
+					$qs .= $key."|".$value."\n";
 				}
 			}
-			$qs = preg_replace("/\n$/", "", $qs);
 			return $qs;
 		}
 		else{
