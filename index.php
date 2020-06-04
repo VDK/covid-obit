@@ -38,10 +38,7 @@ if (isset($_POST['fullname'])){
   $dod = " ".trim(strip_tags($_POST['dod']));
   if ($dod != " "){
     // makes in possible to input "last friday -1 weeks"
-    if (preg_match('/^[21]\d{3}$/', $dod)){
-      $person1->setDOD($dod."-01-01", 9);
-    }
-    elseif (!strripos("last ", $dod)){ 
+    if (!strripos("last ", $dod)){ 
       for ( $days = 7;  $days--;) {
         $dayOfWeek = $loopDate->modify( '+1 days' )->format( 'l' );
         if (strripos($dod, $dayOfWeek) != false){
@@ -69,6 +66,9 @@ if (isset($_POST['fullname'])){
             $person1->setDOD($date->format("Y-m-d"), 10);
          }
       }
+    }
+    if (preg_match('/^ [21]\d{3}$/', $dod)){
+      $person1->setDOD($dod."-01-01", 9);
     }
   }
   //end DOD
@@ -100,7 +100,7 @@ LAST|P31|Q5
 LAST|".$region->getNationality('qs');
   }
   $qs .= 
-   appendProp($person1->getQID(),$person1->getName('qs'))
+   appendProp($person1->getQID(), $person1->getName('qs'))
   .appendProp($person1->getQID(), "P793|".$region->getQID(), $reference1->getQS()) 
   .appendProp($person1->getQID(), $person1->getDOB('qs'), $reference1->getQS())
   .appendProp($person1->getQID(), $person1->getDOD('qs'), $reference1->getQS())
