@@ -83,7 +83,8 @@ if (isset($_POST['fullname'])){
   //reduce accuracy if only month + year:
   for ($months=0; $months < 11; $months++) { 
      $month = $loopDate->modify( '-1 months' )->format( 'F' );
-     if (preg_match('/^'.$month.' [12]\d{3}$/i' , $dob)  ){
+     if (preg_match('/^'.$month.' [12]\d{3}$/i' , $dob)  
+      || preg_match('/^[12]\d{3}\s*'.$month.'$/i' , $dob)  ){
         $person1->setDOB($dob, 10);
      }
   }
